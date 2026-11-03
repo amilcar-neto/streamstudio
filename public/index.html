@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0f0d0c">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Salas privadas pra transmitir tela, janela ou jogo pros amigos, com som e em alta qualidade.">
+  <!-- __BASE__ é trocado pelo instalador (ex.: /stream); os links relativos partem daqui -->
+  <base href="__BASE__/">
+  <title>StreamStudio</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%230f0d0c'/><circle cx='16' cy='16' r='6' fill='%23ff3b30'/></svg>">
+  <link rel="preload" href="vendor/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
+  <!-- ?v= é trocado a cada instalação: o Cloudflare guarda arquivos por horas -->
+  <link rel="stylesheet" href="vendor/phosphor/regular.css?v=2.1.2">
+  <link rel="stylesheet" href="vendor/phosphor/fill.css?v=2.1.2">
+  <link rel="stylesheet" href="style.css?v=__VERSAO__">
+</head>
+<body>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+  <!-- luz difusa de estúdio (fora da sala) -->
+  <div class="geis" aria-hidden="true"><span class="gel gel-a"></span><span class="gel gel-b"></span><span class="gel gel-c"></span></div>
+
+  <!-- ================= ENTRADA: apelido (e senha, se veio pelo endereço de uma sala) ================= -->
+  <section id="tela-entrada" class="entrada" hidden>
+    <header class="barra">
+      <a class="marca" href="./" data-link translate="no">streamstudio<span class="marca-rec" aria-hidden="true"></span></a>
+    </header>
+    <main class="entrada-corpo" id="conteudo">
+      <h1 class="titulo-luz" id="entrada-titulo">Transmita junto com seus amigos.</h1>
+      <p class="entrada-sub" id="entrada-sub">Tela, janela ou jogo, com som e em alta qualidade. Sem cadastro.</p>
+
+      <form id="form-entrada" class="form-entrada" novalidate>
+        <div class="campo">
+          <label for="in-nome">Seu apelido</label>
+          <input id="in-nome" class="input-grande" name="nickname" maxlength="24" autocomplete="nickname" spellcheck="false" placeholder="Como a galera te chama…">
+        </div>
+        <div class="campo" id="campo-senha-sala" hidden>
+          <label for="in-senha-sala">Senha da sala</label>
+          <input id="in-senha-sala" class="input-grande" name="password" type="password" autocomplete="off" spellcheck="false">
+        </div>
+        <p id="erro-entrada" class="erro" role="alert"></p>
+        <div class="linha-acoes">
+          <button class="btn btn-claro btn-alto" type="submit" id="btn-entrar">Continuar</button>
+          <a class="link-sec" id="link-inicio" href="./" data-link hidden>Ir pro início</a>
+        </div>
+      </form>
+    </main>
+  </section>
+
+  <!-- ================= INÍCIO: entrar ou criar ================= -->
+  <section id="tela-inicio" class="inicio" hidden>
+    <header class="barra">
+      <a class="marca" href="./" data-link translate="no">streamstudio<span class="marca-rec" aria-hidden="true"></span></a>
+      <button class="chip-eu" id="btn-nome" type="button" aria-label="Trocar seu apelido">
+        <span class="avatar" id="avatar-eu" aria-hidden="true"></span>
+        <span id="nome-atual" class="truncar"></span>
+      </button>
+    </header>
+
+    <main class="inicio-corpo">
+      <h1 class="sr">Entrar ou criar uma sala</h1>
+
+      <section class="painel" aria-labelledby="entrar-tit">
+        <h2 id="entrar-tit" class="painel-titulo">Entrar numa sala</h2>
+        <p class="painel-sub">Com o link do convite, o código ou o nome da sala.</p>
+        <form id="form-entrar-sala" class="form-painel" novalidate>
+          <div class="campo">
+            <label for="in-codigo">Link, código ou nome da sala</label>
+            <input id="in-codigo" name="sala" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="k7mq-x3ta…">
+          </div>
+          <div class="campo" id="campo-codigo-senha">
+            <label for="in-codigo-senha">Senha</label>
+            <input id="in-codigo-senha" name="senha-sala" type="password" autocomplete="off" spellcheck="false">
+            <span class="ajuda">Link de convite entra sem senha.</span>
+          </div>
+          <p id="erro-entrar-sala" class="erro" role="alert"></p>
+          <button class="btn btn-claro btn-alto" type="submit" id="btn-entrar-sala">Entrar</button>
+        </form>
+      </section>
+
+      <section class="painel" aria-labelledby="criar-tit">
+        <h2 id="criar-tit" class="painel-titulo">Criar sala</h2>
+        <p class="painel-sub">A senha já vem pronta. Cria e manda o convite.</p>
+        <form id="form-criar" class="form-painel" novalidate>
+          <div class="campo">
+            <label for="in-sala-nome">Nome da sala <span class="opcional">(opcional)</span></label>
+            <input id="in-sala-nome" name="sala-nome" maxlength="40" autocomplete="off" placeholder="Sexta de filme…">
+            <span class="ajuda">Sem nome, a sala fica com o código.</span>
+          </div>
+          <div class="campo">
+            <label for="in-sala-senha">Senha</label>
+            <div class="campo-com-botoes">
+              <input id="in-sala-senha" name="nova-senha" type="password" autocomplete="new-password" spellcheck="false" maxlength="128">
+              <button type="button" class="btn btn-fantasma btn-icone" id="btn-ver-senha" aria-label="Mostrar senha" aria-pressed="false"><i class="ph ph-eye" aria-hidden="true"></i></button>
+              <button type="button" class="btn btn-fantasma btn-icone" id="btn-gerar-senha" aria-label="Gerar outra senha"><i class="ph ph-arrows-clockwise" aria-hidden="true"></i></button>
+            </div>
+          </div>
+          <div class="campo">
+            <label for="in-ocioso">Fechar se ninguém transmitir por</label>
+            <select id="in-ocioso" name="ocioso">
+              <option value="5" selected>5 minutos</option>
+              <option value="10">10 minutos</option>
+              <option value="15">15 minutos</option>
+              <option value="30">30 minutos</option>
+              <option value="60">1 hora</option>
+            </select>
+            <span class="ajuda">A sala também fecha quando todo mundo sai.</span>
+          </div>
+          <p id="erro-criar" class="erro" role="alert"></p>
+          <button class="btn btn-claro btn-alto" type="submit" id="btn-criar">Criar sala</button>
+          <p class="capacidade num" id="capacidade" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+  </section>
+
+  <!-- ================= SALA ================= -->
+  <section id="tela-sala" class="sala" hidden>
+    <div class="luz-ambiente" aria-hidden="true">
+      <span class="luz luz-e" id="luz-e"></span><span class="luz luz-c" id="luz-c"></span><span class="luz luz-d" id="luz-d"></span>
+    </div>
+
+    <header class="sala-topo">
+      <div class="topo-esq">
+        <a class="btn btn-fantasma btn-icone redondo" href="./" data-link aria-label="Sair da sala"><i class="ph ph-arrow-left" aria-hidden="true"></i></a>
+        <h1 class="sala-nome truncar" id="sala-nome"></h1>
+        <button class="chip-codigo num" id="btn-codigo" type="button" aria-label="Copiar código da sala"></button>
+        <span id="status-conexao" class="status" role="status">Conectando…</span>
+      </div>
+      <div class="topo-dir">
+        <div class="segmentado" role="radiogroup" aria-label="Layout">
+          <button role="radio" aria-checked="true" data-layout="foco" title="Foco (G)"><span>Foco</span></button>
+          <button role="radio" aria-checked="false" data-layout="mosaico" title="Mosaico (G)"><span>Mosaico</span></button>
+        </div>
+        <button id="btn-convidar" class="btn btn-contorno"><i class="ph ph-user-plus" aria-hidden="true"></i><span>Convidar</span></button>
+        <button id="btn-ajustes-sala" class="btn btn-fantasma btn-icone redondo" aria-label="Ajustes da sala" title="Ajustes da sala" hidden><i class="ph ph-sliders-horizontal" aria-hidden="true"></i></button>
+        <button id="btn-pessoas" class="btn btn-fantasma btn-icone redondo" aria-label="Mostrar quem está na sala" aria-expanded="true"><i class="ph ph-sidebar-simple" aria-hidden="true"></i></button>
+      </div>
+    </header>
+
+    <div class="sala-corpo">
+      <main class="palco-area" id="palco-area">
+        <div class="aviso-ocioso" id="aviso-ocioso" role="status" hidden></div>
+
+        <div id="vazio" class="vazio">
+          <h2>Ninguém transmitindo ainda</h2>
+          <p>Clique em <b>Transmitir</b> e escolha uma tela, janela ou aba. Todo mundo na sala começa a ver na hora.</p>
+        </div>
+
+        <div id="palco" class="palco" tabindex="-1" hidden>
+          <div class="palco-video" id="palco-video"></div>
+          <div class="stats" id="stats" hidden></div>
+          <div class="carregando" id="carregando" hidden><span class="carregando-barra"></span></div>
+          <div class="controles" id="controles">
+            <div class="ctl-esq">
+              <span class="selo-vivo"><span class="ponto-rec" aria-hidden="true"></span>Ao vivo</span>
+              <span class="quem truncar" id="quem-assiste"></span>
+              <span class="sem-som" id="sem-som" hidden><i class="ph ph-speaker-slash" aria-hidden="true"></i>Sem som</span>
+            </div>
+            <div class="ctl-dir">
+              <button class="ico" id="btn-mudo" aria-label="Mudo (M)"><i class="ph ph-speaker-high" aria-hidden="true"></i></button>
+              <input id="volume" type="range" min="0" max="100" value="80" aria-label="Volume">
+              <button class="ico" id="btn-stats" aria-label="Estatísticas (I)" aria-pressed="false"><i class="ph ph-chart-line" aria-hidden="true"></i></button>
+              <button class="ico" id="btn-pip" aria-label="Janela flutuante (P)"><i class="ph ph-picture-in-picture" aria-hidden="true"></i></button>
+              <button class="ico" id="btn-teatro" aria-label="Modo teatro (T)" aria-pressed="false"><i class="ph ph-rectangle" aria-hidden="true"></i></button>
+              <button class="ico" id="btn-cheia" aria-label="Tela cheia (F)"><i class="ph ph-corners-out" aria-hidden="true"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div id="faixa" class="faixa" hidden aria-label="Outras transmissões"></div>
+        <div id="mosaico" class="mosaico" hidden aria-label="Todas as transmissões"></div>
+
+        <!-- doca: transmitir fica sempre no mesmo lugar, embaixo e no centro do palco -->
+        <div class="doca" id="doca">
+          <p class="tx-aviso" id="tx-aviso" role="status" hidden></p>
+          <div class="doca-linha">
+            <button id="btn-transmitir" class="btn btn-transmitir" type="button"><span class="ponto-rec" aria-hidden="true"></span><span>Transmitir</span></button>
+            <div id="ao-vivo" class="ao-vivo" hidden>
+              <span class="ponto-rec" aria-hidden="true"></span>
+              <span class="num" id="tempo-no-ar">00:00:00</span>
+              <button class="btn btn-parar" id="btn-parar" type="button">Parar</button>
+            </div>
+            <button class="btn btn-contorno" id="btn-trocar" type="button" hidden><i class="ph ph-swap" aria-hidden="true"></i><span>Trocar fonte</span></button>
+            <button class="btn btn-contorno btn-icone redondo" id="btn-config-tx" type="button" popovertarget="pop-tx" aria-label="Ajustes da transmissão"><i class="ph ph-gear-six" aria-hidden="true"></i></button>
+          </div>
+        </div>
+      </main>
+
+      <aside class="lateral" id="lateral" aria-label="Pessoas na sala">
+        <section class="cartao cartao-pessoas" aria-labelledby="pessoas-tit">
+          <h2 class="cartao-tit" id="pessoas-tit">Na sala <span class="num" id="qtd-sala"></span></h2>
+          <ul id="lista-pessoas" class="lista-pessoas"></ul>
+        </section>
+      </aside>
+    </div>
+
+    <div id="pop-tx" class="pop-tx" popover aria-labelledby="pop-tx-tit">
+      <h2 class="pop-tit" id="pop-tx-tit">Ajustes da transmissão</h2>
+      <p class="tx-info num" id="tx-info" hidden></p>
+      <div class="grade-op">
+        <div class="campo">
+          <label for="op-res">Resolução</label>
+          <select id="op-res">
+            <option value="720">720p</option>
+            <option value="1080">1080p</option>
+            <option value="1440">1440p</option>
+            <option value="2160">4K</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="op-fps">Quadros</label>
+          <select id="op-fps">
+            <option value="30">30 fps</option>
+            <option value="60">60 fps</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="op-bitrate">Bitrate</label>
+          <select id="op-bitrate">
+            <option value="4">4 Mbps</option>
+            <option value="6">6 Mbps</option>
+            <option value="8">8 Mbps</option>
+            <option value="12">12 Mbps</option>
+            <option value="16">16 Mbps</option>
+            <option value="20">20 Mbps</option>
+            <option value="25">25 Mbps</option>
+            <option value="30">30 Mbps</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="op-codec">Codec</label>
+          <select id="op-codec">
+            <option value="h264">H.264</option>
+            <option value="vp8">VP8</option>
+            <option value="vp9">VP9</option>
+            <option value="av1">AV1</option>
+          </select>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="op-audio" checked> Levar o som junto</label>
+      <p class="ajuda" id="op-dica">Os ajustes valem na hora, até com a transmissão no ar. O codec já vem escolhido pro seu PC: H.264 quando o navegador usa a placa de vídeo, VP9 quando não usa. No Firefox, use VP8.</p>
+      <p class="tx-aviso" id="aviso-navegador" hidden>No Firefox a imagem trava quando a janela transmitida fica atrás de outra, e o fps cai. Pra transmitir, use Chrome ou Edge. Pra assistir, qualquer um serve.</p>
+    </div>
+  </section>
+
+  <!-- ================= DIÁLOGO: CONVITE ================= -->
+  <dialog id="dlg-convite" class="dialogo" aria-labelledby="dlg-convite-tit">
+    <form method="dialog">
+      <h2 id="dlg-convite-tit">Chamar pra <span id="convite-sala"></span></h2>
+      <div class="campo">
+        <label for="convite-link">Link de convite</label>
+        <div class="campo-com-botoes">
+          <input id="convite-link" readonly class="mono">
+          <button type="button" class="btn btn-claro" data-copiar="convite-link"><i class="ph ph-copy" aria-hidden="true"></i>Copiar</button>
+        </div>
+        <span class="ajuda">Entra direto, sem senha. Mande só pra quem você quer na sala.</span>
+      </div>
+      <div class="campo">
+        <label for="convite-codigo">Ou o código, com a senha</label>
+        <div class="campo-com-botoes">
+          <input id="convite-codigo" readonly class="mono">
+          <button type="button" class="btn btn-contorno" data-copiar="convite-codigo"><i class="ph ph-copy" aria-hidden="true"></i>Copiar</button>
+        </div>
+        <span class="ajuda">Também dá pra entrar pelo nome da sala e a senha.</span>
+      </div>
+      <div class="acoes">
+        <button class="btn btn-contorno" value="ok" type="submit">Fechar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ================= DIÁLOGO: AJUSTES DA SALA (dono) ================= -->
+  <dialog id="dlg-ajustes" class="dialogo" aria-labelledby="dlg-ajustes-tit">
+    <form method="dialog" id="form-ajustes">
+      <h2 id="dlg-ajustes-tit">Ajustes da sala</h2>
+      <div class="campo">
+        <label for="aj-ocioso">Fechar se ninguém transmitir por</label>
+        <select id="aj-ocioso">
+          <option value="1">1 minuto</option>
+          <option value="5">5 minutos</option>
+          <option value="10">10 minutos</option>
+          <option value="15">15 minutos</option>
+          <option value="30">30 minutos</option>
+          <option value="60">1 hora</option>
+        </select>
+      </div>
+      <div class="campo">
+        <span class="rotulo">Link de convite</span>
+        <button type="button" class="btn btn-contorno" id="btn-novo-convite"><i class="ph ph-arrows-clockwise" aria-hidden="true"></i>Trocar o link</button>
+        <span class="ajuda">O link antigo para de funcionar. Quem já está na sala continua.</span>
+      </div>
+      <p id="erro-ajustes" class="erro" role="alert"></p>
+      <div class="acoes acoes-separadas">
+        <button type="button" class="btn btn-perigo-suave" id="btn-encerrar"><i class="ph ph-trash" aria-hidden="true"></i>Encerrar sala</button>
+        <button class="btn btn-claro" value="ok" type="submit">Pronto</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ================= DIÁLOGO: APELIDO ================= -->
+  <dialog id="dlg-nome" class="dialogo estreito" aria-labelledby="dlg-nome-tit">
+    <form method="dialog" id="form-nome">
+      <h2 id="dlg-nome-tit">Trocar apelido</h2>
+      <div class="campo">
+        <label for="in-novo-nome">Seu apelido</label>
+        <input id="in-novo-nome" name="nickname" maxlength="24" autocomplete="nickname" spellcheck="false">
+      </div>
+      <p id="erro-nome" class="erro" role="alert"></p>
+      <div class="acoes">
+        <button class="btn btn-fantasma" value="cancelar" type="submit" formnovalidate>Cancelar</button>
+        <button class="btn btn-claro" value="ok" type="submit">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <script type="module" src="app.js?v=__VERSAO__"></script>
+</body>
+</html>
