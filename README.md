@@ -49,14 +49,18 @@ Atalhos na sala: **F** tela cheia · **T** teatro · **P** janela flutuante · *
 
 ## Instalar / atualizar no VPS
 
+Requer Linux com systemd (Debian/Ubuntu), Python 3 e um domínio apontando para o servidor.
+
+```bash
+git clone https://github.com/amilcar-neto/streamstudio.git
+cd streamstudio && sudo bash install.sh stream.exemplo.com /stream
 ```
-tar xzf streamamigos.tar.gz -C /opt/streamstudio-src --overwrite
-cd /opt/streamstudio-src/streamamigos && sudo bash install.sh stream.exemplo.com /stream
-```
+
+Para atualizar, rode `git pull` e o mesmo `install.sh` (ele é idempotente).
 
 Reinicia o LiveKit (quem estiver numa sala cai e reconecta). Pra mudar só o visual sem derrubar ninguém, basta trocar os arquivos de `/opt/streamamigos/public` e carimbar `__VERSAO__` e `__BASE__` no `index.html`.
 
-Portas: **7882 UDP** (mídia) e **7881 TCP** (pra quem tem UDP bloqueado) liberadas no firewall do painel da Hostinger.
+Portas: **7882 UDP** (mídia) e **7881 TCP** (pra quem tem UDP bloqueado) liberadas também no firewall do provedor da VPS, se ele tiver um.
 
 ## Comandos úteis
 
