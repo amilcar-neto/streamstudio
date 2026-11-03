@@ -2,6 +2,10 @@
 
 Salas privadas pra transmitir tela, janela ou jogo pros amigos, com ou sem som, em até 4K/60 fps, direto do navegador. Sem cadastro. Está no ar e é usado pelo meu grupo de amigos.
 
+![Sala com uma transmissão ao vivo e duas pessoas assistindo](docs/img/sala.png)
+
+<sub>Print de uma demonstração local: a transmissão é uma cena animada de teste.</sub>
+
 ## Destaques técnicos
 
 - **Vídeo em tempo real com WebRTC:** servidor de mídia LiveKit (SFU). Resolução, fps, bitrate e codec mudam ao vivo, e dá pra trocar a tela transmitida sem a live cair.
@@ -15,6 +19,8 @@ Feito com Claude Code, usando skills de design e de revisão de segurança, com 
 Depois de instalar, o site fica em `https://<seu-domínio>/stream/`.
 
 ## Como funciona
+
+<img src="docs/img/inicio.png" alt="Tela inicial: entrar ou criar sala" width="640">
 
 1. Abre o site e confirma o apelido (fica salvo pra próxima vez).
 2. **Entrar numa sala**: link de convite (entra direto), ou código + senha, ou nome da sala + senha.
