@@ -1,6 +1,6 @@
 # StreamStudio
 
-Salas privadas pra transmitir tela, janela ou jogo pros amigos, com ou sem som, em até 4K/60 fps, direto do navegador. Sem cadastro. Está no ar e é usado pelo meu grupo de amigos.
+Salas privadas pra transmitir tela, janela ou jogo pros amigos, com ou sem som, em até 4K/60 fps, direto do navegador ou pelo app para Windows. Sem cadastro. Está no ar e é usado pelo meu grupo de amigos.
 
 ![Sala com uma transmissão ao vivo e duas pessoas assistindo](docs/img/sala.png)
 
@@ -12,7 +12,8 @@ Salas privadas pra transmitir tela, janela ou jogo pros amigos, com ou sem som, 
 - **Back-end sem dependências:** API de salas em Python usando só a biblioteca padrão. Gera tokens JWT do LiveKit, convites, senhas com PBKDF2, recebe webhook e apaga sozinha as salas vazias ou paradas.
 - **Segurança:** limite de tentativas por IP real atrás do Cloudflare, tokens restritos a uma sala, CSP e serviços isolados pelo systemd.
 - **Instalação em um comando:** `install.sh` idempotente monta LiveKit, chaves, systemd, firewall e Caddy, com backup e rollback.
-- **Front-end sem framework nem build:** HTML, CSS e JavaScript puros (~1.400 linhas no `app.js`).
+- **Front-end sem framework nem build:** HTML, CSS e JavaScript puros (~1.500 linhas no `app.js`).
+- **App nativo para Windows (Tauri 2 + Rust):** captura pela API oficial do Windows (sem injetar nada no jogo), som só de um programa ou tudo menos o Discord, envio pelo SDK Rust do LiveKit e atualização automática com instalador assinado.
 
 Feito com Claude Code, usando skills de design e de revisão de segurança, com as decisões de produto e os testes com os amigos feitos por mim.
 
@@ -35,6 +36,17 @@ A sala é **apagada** quando:
 - quem criou encerra (Ajustes da sala, a engrenagem, só aparece pra quem criou).
 
 Atalhos na sala: **F** tela cheia · **T** teatro · **P** janela flutuante · **G** foco/mosaico · **M** mudo · **↑ ↓** volume · **I** estatísticas · **1-9** escolhe a transmissão.
+
+## App para Windows (opcional)
+
+Quem transmite pode usar o app em `app/` em vez do navegador. Quem assiste continua só no navegador.
+
+- **Jogo em tela cheia aparece na lista**, sem tela preta, e sem a borda amarela de captura no Windows 11.
+- **Escolha do som:** só o som de um app (o jogo, por exemplo), tudo menos o Discord, ou sem som.
+- Links de convite do site têm **Abrir no app**, e o app abre a sala no navegador quando precisa.
+- Troca de janela, resolução e fps ao vivo, como no site.
+
+Guia de uso em [app/LEIA-ME.md](app/LEIA-ME.md) e como compilar em [app/DESENVOLVIMENTO.md](app/DESENVOLVIMENTO.md).
 
 ## Dicas pra transmitir
 
@@ -79,6 +91,7 @@ Portas: **7882 UDP** (mídia) e **7881 TCP** (pra quem tem UDP bloqueado) libera
 
 ## Créditos de terceiros
 
-- [LiveKit client SDK](https://github.com/livekit/client-sdk-js) (`public/livekit-client.js`), licença Apache 2.0.
+- [LiveKit client SDK](https://github.com/livekit/client-sdk-js) (`public/livekit-client.js` e `app/ui/player/`), licença Apache 2.0.
+- [LiveKit Rust SDK](https://github.com/livekit/rust-sdks) e [Tauri](https://tauri.app) no app, licenças Apache 2.0/MIT.
 - [Phosphor Icons](https://phosphoricons.com), licença MIT.
 - Fontes [Geist e Geist Mono](https://vercel.com/font) e [Bricolage Grotesque](https://github.com/ateliertriay/bricolage), licença SIL Open Font License 1.1.

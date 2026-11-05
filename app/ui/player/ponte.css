@@ -1,0 +1,5 @@
+.sala-topo, .doca { display: none !important; }
+.sala { height: 100dvh; }
+/* P7: prévia local da transmissão nativa, no lugar do vídeo baixado do servidor */
+.previa-nativa { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #070605; display: block; }
+.previa-nativa[hidden] { display: none; }

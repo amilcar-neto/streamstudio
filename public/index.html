@@ -10,7 +10,7 @@
   <!-- __BASE__ é trocado pelo instalador (ex.: /stream); os links relativos partem daqui -->
   <base href="__BASE__/">
   <title>StreamStudio</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='9' fill='%230f0d0c'/><circle cx='16' cy='16' r='6' fill='%23ff3b30'/></svg>">
+  <link rel="icon" id="favicon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='6' fill='%23ff3b30' fill-opacity='.35'/></svg>">
   <link rel="preload" href="vendor/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
   <!-- ?v= é trocado a cada instalação: o Cloudflare guarda arquivos por horas -->
   <link rel="stylesheet" href="vendor/phosphor/regular.css?v=2.1.2">
@@ -47,6 +47,22 @@
           <a class="link-sec" id="link-inicio" href="./" data-link hidden>Ir pro início</a>
         </div>
       </form>
+    </main>
+  </section>
+
+  <!-- ================= ABRIR: link de sala aberto no navegador (app ou navegador) ================= -->
+  <section id="tela-abrir" class="entrada" hidden>
+    <header class="barra">
+      <a class="marca" href="./" data-link translate="no">streamstudio<span class="marca-rec" aria-hidden="true"></span></a>
+    </header>
+    <main class="entrada-corpo">
+      <h1 class="titulo-luz" id="abrir-titulo">Te chamaram pra uma sala.</h1>
+      <p class="entrada-sub" id="abrir-sub" aria-live="polite"></p>
+      <div class="linha-acoes acoes-abrir">
+        <a class="btn btn-claro btn-alto" id="btn-abrir-app" href="streamstudio://"><i class="ph ph-desktop" aria-hidden="true"></i>Abrir no app</a>
+        <button class="btn btn-contorno btn-alto" type="button" id="btn-continuar-navegador">Continuar no navegador</button>
+      </div>
+      <p class="ajuda acoes-abrir-ajuda">Não tem o app? Pelo navegador funciona sem instalar nada.</p>
     </main>
   </section>
 
@@ -113,6 +129,10 @@
           <button class="btn btn-claro btn-alto" type="submit" id="btn-criar">Criar sala</button>
           <p class="capacidade num" id="capacidade" aria-live="polite"></p>
         </form>
+        <p class="baixar-app" id="baixar-app" hidden>
+          <a class="link-sec" id="link-baixar-app" href="baixar/StreamStudio-setup.exe" download><i class="ph ph-download-simple" aria-hidden="true"></i>Baixar o app para transmitir</a>
+          <span class="ajuda">Windows 10 ou 11. Pega jogo em tela cheia e deixa o som do Discord de fora.</span>
+        </p>
       </section>
     </main>
   </section>
@@ -136,6 +156,7 @@
           <button role="radio" aria-checked="false" data-layout="mosaico" title="Mosaico (G)"><span>Mosaico</span></button>
         </div>
         <button id="btn-convidar" class="btn btn-contorno"><i class="ph ph-user-plus" aria-hidden="true"></i><span>Convidar</span></button>
+        <a id="btn-sala-app" class="btn btn-fantasma btn-icone redondo" href="streamstudio://" aria-label="Abrir esta sala no app" title="Abrir esta sala no app"><i class="ph ph-desktop" aria-hidden="true"></i></a>
         <button id="btn-ajustes-sala" class="btn btn-fantasma btn-icone redondo" aria-label="Ajustes da sala" title="Ajustes da sala" hidden><i class="ph ph-sliders-horizontal" aria-hidden="true"></i></button>
         <button id="btn-pessoas" class="btn btn-fantasma btn-icone redondo" aria-label="Mostrar quem está na sala" aria-expanded="true"><i class="ph ph-sidebar-simple" aria-hidden="true"></i></button>
       </div>
@@ -267,6 +288,15 @@
         </div>
         <span class="ajuda">Também dá pra entrar pelo nome da sala e a senha.</span>
       </div>
+      <div class="campo" id="campo-convite-senha" hidden>
+        <label for="convite-senha">Senha</label>
+        <div class="campo-com-botoes">
+          <input id="convite-senha" type="password" readonly class="mono">
+          <button type="button" class="btn btn-fantasma btn-icone" id="btn-ver-convite-senha" aria-label="Mostrar senha" aria-pressed="false"><i class="ph ph-eye" aria-hidden="true"></i></button>
+          <button type="button" class="btn btn-contorno" data-copiar="convite-senha"><i class="ph ph-copy" aria-hidden="true"></i>Copiar</button>
+        </div>
+      </div>
+      <p class="ajuda" id="convite-sem-senha" hidden>A senha ficou no navegador onde você criou a sala.</p>
       <div class="acoes">
         <button class="btn btn-contorno" value="ok" type="submit">Fechar</button>
       </div>

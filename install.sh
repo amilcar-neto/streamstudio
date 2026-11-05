@@ -177,7 +177,7 @@ if command -v ufw >/dev/null && ufw status | grep -q "Status: active"; then
 else
   echo "ufw não está ativo, nada a fazer aqui."
 fi
-amarelo "Se o painel da Hostinger tiver firewall ligado, libere lá também: 7881 TCP e 7882 UDP."
+amarelo "Se o painel do provedor da VPS tiver firewall ligado, libere lá também: 7881 TCP e 7882 UDP."
 
 # ---------------------------------------------------------------- 6. Caddy
 verde "[6/6] Configurando o Caddy..."

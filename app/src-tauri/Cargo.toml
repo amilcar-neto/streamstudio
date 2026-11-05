@@ -1,0 +1,52 @@
+[package]
+name = "streamstudio"
+version = "0.2.2"
+description = "Aplicativo Windows do StreamStudio"
+authors = ["StreamStudio"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+# Mesma versão das provas F1.3/F1.4
+# native-tls: sem isso o SDK não conecta em wss:// (o site no ar); só ws:// local funcionava
+livekit = { version = "=0.10.0", features = ["native-tls"] }
+tokio = { version = "1", features = ["rt", "macros", "time", "sync"] }
+# 0.12 é a mesma versão que o SDK do LiveKit usa, para não ter duas
+reqwest = { version = "0.12", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+windows-capture = "=2.0.1"
+base64 = "0.22"
+flate2 = "1"
+webview2-com = "=0.39.1"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+# o macro `implement` (aviso de ativação do áudio, F2.5) usa o windows-core direto
+windows-core = "=0.62.2"
+windows = { version = "=0.62.2", features = ["Win32_Foundation", "Win32_Media_Audio", "Win32_Security", "Win32_System_Com",
+    "Win32_System_Com_StructuredStorage", "Win32_System_Diagnostics_ToolHelp", "Win32_System_Threading", "Win32_System_Variant",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Graphics_Gdi", "Win32_Graphics_Dwm", "Win32_Storage_Xps", "Win32_System_Memory"] }
+tauri-plugin-deep-link = "2"
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+# F5.2: atualização automática assinada
+tauri-plugin-updater = "2"
+
+[dev-dependencies]
+# mock_builder para o ensaio do atualizador (F5.2)
+tauri = { version = "2", features = ["test"] }
+futures-util = "0.3"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "io-util", "time"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+
+# Tamanho do pacote: otimização entre crates e sem símbolos. Não usa opt-level "s"/"z"
+# (deixaria captura e mistura de áudio mais lentas) nem panic = "abort".
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

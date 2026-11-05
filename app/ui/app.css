@@ -1,0 +1,132 @@
+/* ==========================================================================
+   StreamStudio (app) · peças que só o app tem
+   Tudo aqui usa as variáveis e os componentes de public/style.css.
+   Nada de cor, fonte ou canto novo: só arranjos para o que o site não tem
+   (escolher janela/monitor, modo de som, painel de quem transmite).
+   ========================================================================== */
+
+/* rótulo "transmissor" ao lado da marca */
+.barra .topo-dir .chip-eu { max-width: 240px; }
+.marca-app { margin-left: 8px; font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--texto-3); align-self: center; }
+
+/* diálogo largo para escolher a fonte */
+.dialogo.largo { width: min(880px, calc(100% - 32px)); padding-bottom: 24px; }
+.dialogo.largo h2 { margin-bottom: 4px; }
+.dialogo h3 { margin: 0; font-size: 14px; font-weight: 500; color: var(--texto-3); }
+.secao { display: flex; flex-direction: column; gap: 14px; }
+.secao-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+/* grade de fontes (janelas e telas com miniatura) */
+.fontes {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  max-height: min(300px, calc(100dvh - 470px)); min-height: 150px; overflow-y: auto; overscroll-behavior: contain;
+  padding: 2px; margin: -2px;
+}
+.fonte {
+  display: flex; flex-direction: column; gap: 8px; padding: 8px;
+  border: 0; border-radius: 16px; background: transparent; text-align: left;
+  cursor: pointer; color: var(--papel);
+  transition: background-color .2s;
+}
+.fonte:hover { background: rgb(242 237 230 / .06); }
+.fonte[aria-checked=true] { background: rgb(242 237 230 / .08); box-shadow: inset 0 0 0 2px rgb(242 237 230 / .4); }
+.fonte-mini {
+  position: relative; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden;
+  background: #070605; display: grid; place-items: center;
+  color: var(--texto-3); font-size: 26px;
+}
+.fonte-mini img, .fonte-mini .mini-falsa { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.fonte-nome { font-size: 13.5px; font-weight: 500; display: flex; align-items: center; gap: 7px; }
+/* P2: ícone do programa ao lado do nome e, sem miniatura, grande no meio */
+.fonte-nome .icone-app { width: 16px; height: 16px; flex: none; }
+.fonte-mini img.icone-grande { position: static; width: 48px; height: 48px; opacity: .9; }
+.marca-minimizada {
+  position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; border-radius: 999px;
+  background: rgb(15 13 12 / .8); color: var(--texto-2); font-size: 11.5px; font-weight: 500;
+}
+.fonte-sub { font-size: 12px; color: var(--texto-3); margin-top: -6px; }
+.fonte.indisponivel .fonte-mini { box-shadow: inset 0 0 0 1px var(--linha); }
+
+/* modo de som: o segmentado largo do site, com uma explicação embaixo */
+.som-app { display: flex; flex-direction: column; gap: 8px; }
+.tocando { color: var(--ok); }
+
+/* sala do transmissor: o palco mostra a fonte em vez de vídeos dos outros */
+.pronto { flex: 1; }
+.fonte-no-ar {
+  position: relative; flex: 1; min-height: 0;
+  border-radius: var(--r-video); overflow: hidden; background: #070605;
+  box-shadow: 0 40px 100px -40px rgb(0 0 0 / .85);
+}
+.fonte-no-ar .mini-falsa { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fonte-no-ar .controles { opacity: 1; }
+.fonte-no-ar .quem { font-size: 15px; }
+.legenda-previa { font-size: 12.5px; color: var(--texto-3); white-space: nowrap; }
+
+/* no app o aviso entra no fluxo, acima da doca: em cima dos números ele esconderia o que explica */
+.doca .tx-aviso { position: static; max-width: 100%; }
+
+/* números da transmissão: cartões pequenos, como o cartão da lateral */
+.medidores { flex: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.medidor {
+  display: flex; flex-direction: column; gap: 2px; padding: 12px 14px;
+  border-radius: 16px; background: var(--vidro); box-shadow: inset 0 0 0 1px var(--linha);
+}
+.medidor-tit { font-size: 12.5px; color: var(--texto-3); }
+.medidor-valor { font-family: var(--mono); font-size: 20px; letter-spacing: -.02em; }
+.medidor-valor small { font-size: 12.5px; color: var(--texto-3); margin-left: 3px; }
+.medidor-sub { font-family: var(--mono); font-size: 12px; color: var(--texto-3); }
+.medidor.ruim .medidor-valor { color: var(--alerta); }
+
+/* lista de pessoas e cartão "sua transmissão" na lateral */
+.detalhes { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; font-size: 13.5px; }
+.detalhes dt { color: var(--texto-3); }
+.detalhes dd { margin: 0; font-family: var(--mono); font-size: 13px; color: var(--texto-2); text-align: right; }
+
+/* janela do app é menor que o navegador: lateral mais estreita */
+@media (max-width: 1100px) {
+  .sala-corpo { grid-template-columns: minmax(0, 1fr) 260px; gap: 14px; }
+  .medidores { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .medidor:nth-child(n+4) { display: none; }
+}
+
+/* só no rascunho: navegação entre as telas */
+.rascunho-nav {
+  position: fixed; right: 12px; bottom: 12px; z-index: 50;
+  display: flex; gap: 4px; padding: 4px; border-radius: 999px;
+  background: rgb(15 13 12 / .85); box-shadow: inset 0 0 0 1px var(--linha);
+  font-size: 12px;
+}
+.rascunho-nav a { color: var(--texto-3); text-decoration: none; padding: 4px 10px; border-radius: 999px; }
+.rascunho-nav a:hover, .rascunho-nav a[aria-current=page] { color: var(--papel); background: rgb(242 237 230 / .1); }
+body.sem-nav .rascunho-nav { display: none; }
+
+[hidden] { display: none !important; }
+.fonte-no-ar .mini-falsa { object-fit: contain; }
+.luz-e { background-color: rgb(var(--gel-ambar) / .22); }
+.luz-c { background-color: rgb(var(--gel-rosa) / .08); }
+.luz-d { background-color: rgb(var(--gel-agua) / .1); }
+.avatar { --h: 24; }
+.dialogo form > .erro { margin: 0; }
+
+/* O player empacotado ocupa o palco e mantém a doca nativa disponível. */
+.sala-corpo:has(#player-app) { position: relative; }
+/* o player cobre a sala nativa; a lista de pessoas dela não deve aparecer por baixo */
+.sala-corpo:has(#player-app) > .lateral { visibility: hidden; }
+#player-app { position: absolute; inset: 0 0 var(--base-player, 110px); width: 100%; height: calc(100% - var(--base-player, 110px)); border: 0; z-index: 2; background: var(--fundo); }
+/* P7: ao vivo, a sua transmissão aparece dentro do player ("Você"); a prévia separada só
+   guarda o espaço para os números e a doca ficarem embaixo, como antes. */
+.sala-corpo:has(#player-app) .fonte-no-ar { visibility: hidden; }
+
+/* App é janela, não página: no tamanho padrão a tela inicial cabe sem rolar. Se a janela
+   ficar pequena, rola com uma barra fina no tom do app (sem a barra cinza do Windows). */
+* { scrollbar-width: thin; scrollbar-color: rgb(242 237 230 / .14) transparent; }
+*:hover { scrollbar-color: rgb(242 237 230 / .28) transparent; }
+.inicio-corpo { padding-top: clamp(12px, 4vh, 56px); padding-bottom: clamp(16px, 4vh, 48px); }
+@media (max-height: 860px) {
+  .inicio .barra { padding-top: 14px; padding-bottom: 14px; }
+  .painel { padding: 28px 32px; }
+  .painel-sub { margin-bottom: 20px; }
+  .form-painel { gap: 14px; }
+}

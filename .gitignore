@@ -2,3 +2,9 @@ __pycache__/
 *.pyc
 estado/
 .env
+app/target/
+app/src-tauri/target/
+app/src-tauri/gen/
+dev/
+segredos/
+app/spikes/*/target/

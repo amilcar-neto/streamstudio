@@ -231,6 +231,8 @@ input[aria-invalid=true] { border-color: var(--rec); }
 .entrada-sub { margin: 28px 0 0; font-size: 19px; color: var(--texto-2); max-width: 40ch; }
 .form-entrada { margin-top: 48px; width: min(440px, 100%); display: flex; flex-direction: column; gap: 18px; }
 .linha-acoes { display: flex; align-items: center; gap: 22px; margin-top: 4px; }
+.acoes-abrir { margin-top: 48px; gap: 14px; }
+.acoes-abrir-ajuda { margin: 18px 0 0; }
 
 /* ==========================================================================
    INÍCIO
@@ -254,6 +256,8 @@ input[aria-invalid=true] { border-color: var(--rec); }
 .form-painel { flex: 1; display: flex; flex-direction: column; gap: 18px; }
 .form-painel > .btn-alto { margin-top: auto; align-self: flex-start; }
 .capacidade { margin: 0; font-size: 13px; color: var(--texto-3); }
+.baixar-app { margin: 26px 0 0; padding-top: 18px; border-top: 1px solid var(--linha); display: flex; flex-direction: column; gap: 6px; }
+.baixar-app .link-sec { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; }
 
 /* ==========================================================================
    SALA

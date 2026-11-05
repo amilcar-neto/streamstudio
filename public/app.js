@@ -43,6 +43,8 @@ const mapa = (nome) => ({
 });
 const chaves = mapa('chaves');
 const donos = mapa('donos');
+// o servidor só guarda o hash da senha: quem criou guarda a senha aqui pra ver depois no Convidar
+const senhas = mapa('senhas');
 
 const plural = (n, um, varios) => `${n} ${n === 1 ? um : varios}`;
 const nomeDe = (p) => p?.name || p?.identity?.split('#')[0] || '?';
@@ -149,8 +151,18 @@ let room = null;
 const streams = new Map();
 let saindoDeProposito = false;
 
-const telas = { entrada: $('tela-entrada'), inicio: $('tela-inicio'), sala: $('tela-sala') };
+const telas = { abrir: $('tela-abrir'), entrada: $('tela-entrada'), inicio: $('tela-inicio'), sala: $('tela-sala') };
+/* Ícone da aba: bolinha vermelha apagada; acende quando alguém da sala está transmitindo. */
+const FAVICON = (aceso) => 'data:image/svg+xml,' + encodeURIComponent(
+  `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='6' fill='#ff3b30'${aceso ? '' : " fill-opacity='.35'"}/></svg>`);
+let faviconAceso = false;
+function pintarFavicon(aceso) {
+  if (aceso === faviconAceso) return;
+  faviconAceso = aceso;
+  $('favicon').href = FAVICON(aceso);
+}
 function mostrar(qual) {
+  if (qual !== 'sala') pintarFavicon(false);
   for (const [nome, tela] of Object.entries(telas)) tela.hidden = nome !== qual;
   document.body.classList.toggle('na-sala', qual === 'sala');
   document.title = qual === 'sala' && estado.sala ? `${estado.sala.nome} · StreamStudio` : 'StreamStudio';
@@ -175,8 +187,58 @@ document.addEventListener('click', (e) => {
 });
 window.addEventListener('popstate', rota);
 
+/* Quem abre um link de sala no navegador escolhe: app ou navegador. Só na primeira rota
+   da página; links colados dentro do site seguem direto. Não detecta se o app existe. */
+let perguntarApp = true;
+function mostrarAbrir(tipo, id) {
+  // F4.6: leva o apelido junto, se já tiver um; o fragmento # não vai ao servidor
+  $('btn-abrir-app').href = `streamstudio://${tipo}/${id}` + (estado.nome ? `#n=${encodeURIComponent(estado.nome)}` : '');
+  $('abrir-titulo').textContent = tipo === 'c' ? 'Te chamaram pra uma sala.' : 'Entrar na sala.';
+  $('abrir-sub').textContent = (tipo === 's' ? `Sala ${formatarCodigo(id)}. ` : '')
+    + 'Abra no app do StreamStudio ou continue aqui no navegador.';
+  mostrar('abrir');
+  $('btn-abrir-app').focus();
+}
+$('btn-abrir-app').addEventListener('click', () => {
+  $('abrir-sub').textContent = 'Abrindo o app… Se nada aconteceu, continue no navegador.';
+});
+$('btn-continuar-navegador').addEventListener('click', () => rota());
+
+/* F4.6: alternar entre site e app sem conta. O botão leva nome, chave da sala e, para quem
+   é dono, o segredo de dono no fragmento # (nunca vai ao servidor). O link de convite não
+   leva nada disso. Quem recebe guarda como se tivesse entrado aqui e apaga o fragmento. */
+const segredoValido = (v, max) => typeof v === 'string' && v.length >= 16 && v.length <= max && /^[A-Za-z0-9._-]+$/.test(v);
+function linkTroca(id) {
+  const f = new URLSearchParams({ n: estado.nome, k: chaves.pegar(id) || '' });
+  const dono = donos.pegar(id);
+  if (dono) f.set('d', dono);
+  return `streamstudio://s/${id}#${f}`;
+}
+function receberTroca() {
+  if (location.hash.length < 2) return;
+  const f = new URLSearchParams(location.hash.slice(1));
+  history.replaceState(history.state, '', location.pathname + location.search);
+  const sala = caminho().match(/^s\/([a-z0-9]{8})$/)?.[1];
+  const nome = (f.get('n') || '').trim();
+  if (nome && nome.length <= 24 && !/[\u0000-\u001f]/.test(nome)) { definirNome(nome); estado.nomeConfirmado = true; }
+  if (!sala || !segredoValido(f.get('k'), 512)) return;
+  chaves.salvar(sala, f.get('k'));
+  if (segredoValido(f.get('d'), 128)) donos.salvar(sala, f.get('d'));
+  perguntarApp = false;  // veio do app: não pergunta "abrir no app?" de novo
+}
+$('btn-sala-app').addEventListener('click', (e) => {
+  if (!estado.sala) return e.preventDefault();
+  e.currentTarget.href = linkTroca(estado.sala.id);
+  toast('Abrindo no app… Quando ele entrar, pode sair daqui.', { acao: { rotulo: 'Sair daqui', fn: () => ir('') }, tempo: 15000 });
+});
+
 async function rota() {
   const p = caminho();
+  if (perguntarApp) {
+    perguntarApp = false;
+    const link = p.match(/^(c)\/([a-z0-9]{6,16})$/) || p.match(/^(s)\/([a-z0-9]{8})$/);
+    if (link) return mostrarAbrir(link[1], link[2]);
+  }
   const sala = p.match(/^s\/([a-z0-9]{8})$/)?.[1] || null;
   if (estado.salaId && sala !== estado.salaId) {
     if (euAoVivo() && !confirm('Você está transmitindo. Sair da sala encerra a transmissão. Sair mesmo assim?')) {
@@ -318,6 +380,18 @@ function mostrarInicio() {
       ? `O servidor está cheio: ${d.abertas} de ${d.max} salas abertas. Espere uma fechar.`
       : `${d.abertas} de ${d.max} salas abertas agora.`;
   }).catch(() => { $('capacidade').textContent = ''; });
+  oferecerApp();
+}
+
+/* "Baixar o app": só no Windows e só se o instalador estiver mesmo no servidor
+   (sem ele, o servidor devolve o index.html no lugar do .exe) */
+let appNoServidor = null;
+function oferecerApp() {
+  if (!/Windows/.test(navigator.userAgent)) return;
+  appNoServidor ??= fetch($('link-baixar-app').href, { method: 'HEAD', cache: 'no-store' })
+    .then((r) => r.ok && !(r.headers.get('content-type') || '').includes('text/html'))
+    .catch(() => false);
+  appNoServidor.then((tem) => { $('baixar-app').hidden = !tem; });
 }
 
 /** entende link de convite, endereço de sala, código ou nome */
@@ -381,6 +455,7 @@ $('form-criar').addEventListener('submit', async (e) => {
     const d = await api('salas', { nome, senha, ocioso: +$('in-ocioso').value });
     chaves.salvar(d.id, d.chave);
     donos.salvar(d.id, d.dono);
+    senhas.salvar(d.id, senha);
     $('in-sala-nome').value = '';
     inSalaSenha.value = gerarSenha();
     estado.convidarAoEntrar = true;
@@ -710,6 +785,7 @@ function render() {
   coletar();
   const ids = [...streams.keys()];
   const temAlgo = ids.length > 0;
+  pintarFavicon(temAlgo);
   const foco = estado.layout === 'foco';
 
   el.vazio.hidden = temAlgo;
@@ -821,7 +897,10 @@ setInterval(() => {
 function desenharPessoas() {
   if (!room) { el.pessoas.replaceChildren(); el.qtd.textContent = ''; return; }
   const todos = [room.localParticipant, ...room.remoteParticipants.values()];
-  el.qtd.textContent = `· ${todos.length}`;
+  // O app do StreamStudio assiste com uma segunda conexão "<nome> (player)": é a mesma
+  // pessoa, então não entra na lista nem na contagem.
+  const lista = todos.filter((p) => !/ \(player\)$/.test(nomeDe(p)));
+  el.qtd.textContent = `· ${lista.length}`;
 
   const vendo = new Map();
   for (const p of todos) {
@@ -829,9 +908,9 @@ function desenharPessoas() {
     if (alvo && alvo !== p.identity) vendo.set(alvo, (vendo.get(alvo) || 0) + 1);
   }
   const transmitindo = (p) => (p.isLocal ? euAoVivo() : streams.has(p.identity));
-  todos.sort((a, b) => (transmitindo(b) - transmitindo(a)) || (b.isLocal - a.isLocal));
+  lista.sort((a, b) => (transmitindo(b) - transmitindo(a)) || (b.isLocal - a.isLocal));
 
-  el.pessoas.replaceChildren(...todos.map((p) => {
+  el.pessoas.replaceChildren(...lista.map((p) => {
     const nome = nomeDe(p) + (p.isLocal ? ' (você)' : '');
     const vivo = transmitindo(p);
     let sub;
@@ -902,8 +981,23 @@ async function abrirConvite() {
   $('convite-sala').textContent = estado.sala.nome;
   $('convite-link').value = `${location.origin}${BASE}c/${estado.sala.convite}`;
   $('convite-codigo').value = estado.sala.codigo;
+  // só quem criou a sala vê a senha
+  const dono = !!donos.pegar(estado.sala.id);
+  const senha = dono ? senhas.pegar(estado.sala.id) : null;
+  $('campo-convite-senha').hidden = !senha;
+  $('convite-sem-senha').hidden = !dono || !!senha;
+  $('convite-senha').value = senha || '';
+  mostrarSenhaConvite(false);
   dlgConvite.showModal();
 }
+function mostrarSenhaConvite(ver) {
+  const b = $('btn-ver-convite-senha');
+  $('convite-senha').type = ver ? 'text' : 'password';
+  b.setAttribute('aria-pressed', String(ver));
+  b.setAttribute('aria-label', ver ? 'Esconder senha' : 'Mostrar senha');
+  b.replaceChildren(icone(ver ? 'eye-slash' : 'eye'));
+}
+$('btn-ver-convite-senha').addEventListener('click', () => mostrarSenhaConvite($('convite-senha').type === 'password'));
 $('btn-convidar').addEventListener('click', abrirConvite);
 for (const b of document.querySelectorAll('[data-copiar]')) {
   b.addEventListener('click', () => copiar($(b.dataset.copiar).value));
@@ -941,6 +1035,7 @@ $('btn-encerrar').addEventListener('click', async () => {
     dlgAjustes.close();
     chaves.apagar(id);
     donos.apagar(id);
+    senhas.apagar(id);
     await sairDaSala();
     toast('Sala encerrada.');
     ir('', { substituir: true });
@@ -1368,9 +1463,11 @@ el.popTx.addEventListener('beforetoggle', (e) => {
 // celular não transmite tela: lá a doca só ocuparia espaço
 if (!navigator.mediaDevices?.getDisplayMedia) {
   el.doca.hidden = true;
+  $('btn-sala-app').hidden = true;  // o app é só para Windows
   el.vazio.querySelector('p').textContent = 'Quando alguém da sala começar a transmitir, aparece aqui na hora. Pelo celular dá pra assistir; transmitir a tela só pelo computador.';
 }
 aplicarVolume();
 pintarTx();
 escolherCodecPadrao();
+receberTroca();
 rota();

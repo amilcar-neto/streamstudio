@@ -1,0 +1,426 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><title>StreamStudio</title><link rel="stylesheet" href="vendor/phosphor/regular.css"><link rel="stylesheet" href="vendor/phosphor/fill.css"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="app.css"></head><body><div id="app"></div><div id="toasts" class="toasts" aria-live="polite"></div><template id="t-entrada">
+  <div class="geis" aria-hidden="true"><span class="gel gel-a"></span><span class="gel gel-b"></span><span class="gel gel-c"></span></div>
+
+  <!-- TELA: apelido. Igual à entrada do site; o app lembra o apelido entre aberturas. -->
+  <section class="entrada">
+    <header class="barra">
+      <span class="marca" translate="no">streamstudio<span class="marca-rec" aria-hidden="true"></span></span>
+    </header>
+    <main class="entrada-corpo" id="conteudo">
+      <h1 class="titulo-luz">Transmita direto do seu PC.</h1>
+      <p class="entrada-sub">Jogo em tela cheia, janela ou monitor, com o som só do que você escolher. Seus amigos assistem pelo navegador.</p>
+
+      <form class="form-entrada" novalidate>
+        <div class="campo">
+          <label for="in-nome">Seu apelido</label>
+          <input id="in-nome" class="input-grande" maxlength="24" autocomplete="nickname" spellcheck="false" placeholder="Como a galera te chama…">
+        </div>
+        <p class="erro" role="alert"></p>
+        <div class="linha-acoes">
+          <button type="submit" class="btn btn-claro btn-alto">Continuar</button>
+        </div>
+      </form>
+    </main>
+  </section>
+
+</template>
+<template id="t-inicio">
+  <div class="geis" aria-hidden="true"><span class="gel gel-a"></span><span class="gel gel-b"></span><span class="gel gel-c"></span></div>
+
+  <!-- TELA: início. Mesmos painéis do site (entrar e criar). Novo: engrenagem do servidor. -->
+  <section class="inicio">
+    <header class="barra">
+      <span class="marca" translate="no">streamstudio<span class="marca-rec" aria-hidden="true"></span></span>
+      <div class="topo-dir">
+        <button class="chip-eu" type="button" aria-label="Trocar seu apelido">
+          <span class="avatar" aria-hidden="true">NE</span>
+          <span class="truncar">neto</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="inicio-corpo" id="conteudo">
+      <h1 class="sr">Entrar ou criar uma sala</h1>
+
+      <section class="painel" aria-labelledby="entrar-tit">
+        <h2 id="entrar-tit" class="painel-titulo">Entrar numa sala</h2>
+        <p class="painel-sub">Cole o link do convite, ou use o código ou o nome da sala.</p>
+        <form class="form-painel" novalidate>
+          <div class="campo">
+            <label for="in-codigo">Link, código ou nome da sala</label>
+            <input id="in-codigo" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="k7mq-x3ta…">
+          </div>
+          <div class="campo" hidden>
+            <label for="in-codigo-senha">Senha</label>
+            <input id="in-codigo-senha" type="password" autocomplete="off" spellcheck="false">
+          </div>
+          <span class="ajuda">Link de convite entra sem senha.</span>
+          <p class="erro" role="alert"></p>
+          <button type="button" class="btn btn-claro btn-alto" data-submit>Entrar</button>
+        </form>
+      </section>
+
+      <section class="painel" aria-labelledby="criar-tit">
+        <h2 id="criar-tit" class="painel-titulo">Criar sala</h2>
+        <p class="painel-sub">A senha já vem pronta. Cria e manda o convite.</p>
+        <form class="form-painel" novalidate>
+          <div class="campo">
+            <label for="in-sala-nome">Nome da sala <span class="opcional">(opcional)</span></label>
+            <input id="in-sala-nome" maxlength="40" autocomplete="off" placeholder="Sexta de filme…">
+            <span class="ajuda">Sem nome, a sala fica com o código.</span>
+          </div>
+          <div class="campo">
+            <label for="in-sala-senha">Senha</label>
+            <div class="campo-com-botoes">
+              <input id="in-sala-senha" type="password" autocomplete="new-password" spellcheck="false" value="cobra-lápis-91">
+              <button type="button" class="btn btn-fantasma btn-icone" aria-label="Mostrar senha" aria-pressed="false"><i class="ph ph-eye" aria-hidden="true"></i></button>
+              <button type="button" class="btn btn-fantasma btn-icone" aria-label="Gerar outra senha"><i class="ph ph-arrows-clockwise" aria-hidden="true"></i></button>
+            </div>
+          </div>
+          <div class="campo">
+            <label for="in-ocioso">Fechar se ninguém transmitir por</label>
+            <select id="in-ocioso">
+              <option value="5" selected>5 minutos</option>
+              <option value="10">10 minutos</option>
+              <option value="15">15 minutos</option>
+              <option value="30">30 minutos</option>
+              <option value="60">1 hora</option>
+            </select>
+          </div>
+          <p class="erro" role="alert"></p>
+          <button type="button" class="btn btn-claro btn-alto" data-submit>Criar sala</button>
+        </form>
+      </section>
+    </main>
+  </section>
+
+  <!-- DIÁLOGO: servidor. Quase ninguém mexe; padrão = o site no ar. -->
+  <dialog id="dlg-servidor" class="dialogo" aria-labelledby="dlg-servidor-tit">
+    <form method="dialog">
+      <h2 id="dlg-servidor-tit">Servidor</h2>
+      <div class="campo">
+        <label for="in-servidor">Endereço do StreamStudio</label>
+        <input id="in-servidor" class="mono" spellcheck="false" autocomplete="off" value="https://stream.exemplo.com/stream">
+        <span class="ajuda">É o mesmo endereço que você abre no navegador. Só troque se alguém te passou outro.</span>
+      </div>
+      <p class="status ok" role="status">Servidor respondendo</p>
+      <div class="acoes acoes-separadas">
+        <button type="button" class="btn btn-fantasma">Voltar ao padrão</button>
+        <button class="btn btn-claro" value="ok" type="submit">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+</template>
+<template id="t-sala">
+  <section class="sala">
+    <div class="luz-ambiente" aria-hidden="true">
+      <span class="luz luz-e"></span><span class="luz luz-c"></span><span class="luz luz-d"></span>
+    </div>
+
+    <header class="sala-topo">
+      <div class="topo-esq">
+        <a class="btn btn-fantasma btn-icone redondo" href="#" data-sair aria-label="Sair da sala"><i class="ph ph-arrow-left" aria-hidden="true"></i></a>
+        <h1 class="sala-nome truncar">Sexta de jogo</h1>
+        <button class="chip-codigo num" type="button" aria-label="Copiar código da sala">k7mq-x3ta</button>
+        <span id="status-conexao" class="status ok" role="status">Conectado</span>
+      </div>
+      <div class="topo-dir">
+        <div class="segmentado" role="radiogroup" aria-label="Layout">
+          <button type="button" role="radio" aria-checked="true" data-layout="foco" title="Foco (G)"><span>Foco</span></button>
+          <button type="button" role="radio" aria-checked="false" data-layout="mosaico" title="Mosaico (G)"><span>Mosaico</span></button>
+        </div>
+        <button class="btn btn-contorno" type="button"><i class="ph ph-user-plus" aria-hidden="true"></i><span>Convidar</span></button>
+        <button class="btn btn-fantasma btn-icone redondo" type="button" aria-label="Abrir no navegador" title="Abrir esta sala no navegador"><i class="ph ph-arrow-square-out" aria-hidden="true"></i></button>
+      </div>
+    </header>
+
+    <div class="sala-corpo">
+      <main class="palco-area" id="conteudo">
+        <!-- TELA: sala, ainda sem transmitir. O app não mostra os vídeos dos outros (isso fica no navegador). -->
+        <div class="vazio pronto">
+          <h2>Pronto pra transmitir</h2>
+          <p>Clique em <b>Transmitir</b> e escolha um jogo, janela ou monitor. Quem está na sala vê pelo navegador, na hora.</p>
+        </div>
+
+        <!-- doca: igual à do site, sempre embaixo e no centro -->
+        <div class="doca">
+          <div class="doca-linha">
+            <button type="button" class="btn btn-transmitir" data-ir="fonte.html"><span class="ponto-rec" aria-hidden="true"></span><span>Transmitir</span></button>
+            <button class="btn btn-contorno btn-icone redondo" type="button" popovertarget="pop-tx" aria-label="Ajustes da transmissão"><i class="ph ph-gear-six" aria-hidden="true"></i></button>
+          </div>
+        </div>
+      </main>
+
+      <aside class="lateral" aria-label="Pessoas na sala">
+        <section class="cartao cartao-pessoas" aria-labelledby="pessoas-tit">
+          <h2 class="cartao-tit" id="pessoas-tit">Na sala <span class="num">0</span></h2>
+          <ul class="lista-pessoas"></ul>
+        </section>
+      </aside>
+    </div>
+
+    <!-- menu da engrenagem: os mesmos campos do site, com os valores que o app aceita -->
+    <div id="pop-tx" class="pop-tx" popover aria-labelledby="pop-tx-tit">
+      <h2 class="pop-tit" id="pop-tx-tit">Ajustes da transmissão</h2>
+      <p class="tx-info num">VP9 · libvpx (processador)
+1920×1080 · 60 fps · até 12 Mbps</p>
+      <div class="grade-op">
+        <div class="campo">
+          <label for="op-res">Resolução</label>
+          <select id="op-res">
+            <option value="720">720p</option>
+            <option value="1080" selected>1080p</option>
+            <option value="1440">1440p</option>
+            <option value="2160">4K</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="op-fps">Quadros</label>
+          <select id="op-fps">
+            <option value="30">30 fps</option>
+            <option value="60" selected>60 fps</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="op-bitrate">Bitrate</label>
+          <select id="op-bitrate">
+            <option value="4">4 Mbps</option>
+            <option value="6">6 Mbps</option>
+            <option value="8">8 Mbps</option>
+            <option value="12" selected>12 Mbps</option>
+            <option value="16">16 Mbps</option>
+            <option value="20">20 Mbps</option>
+            <option value="25">25 Mbps</option>
+            <option value="30">30 Mbps</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="op-codec">Codec</label>
+          <select id="op-codec">
+            <option value="auto" selected>Automático (VP9)</option>
+            <option value="h264">H.264</option>
+            <option value="vp8">VP8</option>
+            <option value="vp9">VP9</option>
+            <option value="av1">AV1</option>
+          </select>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="op-svc"> Camadas de qualidade (SVC)</label>
+      <p class="ajuda">O codec já vem escolhido pro seu PC: H.264 só quando a placa de vídeo codifica, senão VP9. As camadas ajudam quem tem internet fraca, mas baixam a qualidade pra todo mundo: deixe desligado se ninguém reclamar.</p>
+    </div>
+  </section>
+
+</template>
+<template id="t-ao-vivo">
+  <section class="sala">
+    <div class="luz-ambiente" aria-hidden="true">
+      <span class="luz luz-e"></span><span class="luz luz-c"></span><span class="luz luz-d"></span>
+    </div>
+
+    <header class="sala-topo">
+      <div class="topo-esq">
+        <a class="btn btn-fantasma btn-icone redondo" href="#" data-sair aria-label="Sair da sala"><i class="ph ph-arrow-left" aria-hidden="true"></i></a>
+        <h1 class="sala-nome truncar">Sexta de jogo</h1>
+        <button class="chip-codigo num" type="button" aria-label="Copiar código da sala">k7mq-x3ta</button>
+        <span id="status-conexao" class="status ok" role="status">Conectado</span>
+      </div>
+      <div class="topo-dir">
+        <div class="segmentado" role="radiogroup" aria-label="Layout">
+          <button type="button" role="radio" aria-checked="true" data-layout="foco" title="Foco (G)"><span>Foco</span></button>
+          <button type="button" role="radio" aria-checked="false" data-layout="mosaico" title="Mosaico (G)"><span>Mosaico</span></button>
+        </div>
+        <button class="btn btn-contorno" type="button"><i class="ph ph-user-plus" aria-hidden="true"></i><span>Convidar</span></button>
+        <button class="btn btn-fantasma btn-icone redondo" type="button" aria-label="Abrir no navegador" title="Abrir esta sala no navegador"><i class="ph ph-arrow-square-out" aria-hidden="true"></i></button>
+      </div>
+    </header>
+
+    <div class="sala-corpo">
+      <main class="palco-area" id="conteudo">
+        <!-- TELA: ao vivo. Prévia da fonte (miniatura renovada a cada poucos segundos) e os números do envio. -->
+        <div class="fonte-no-ar">
+          <canvas class="mini-falsa" aria-label="Prévia da sua transmissão"></canvas>
+          <div class="controles">
+            <div class="ctl-esq">
+              <span class="selo-vivo"><span class="ponto-rec" aria-hidden="true"></span>Ao vivo</span>
+              <span class="quem truncar">Horizonte Selvagem</span>
+              <span class="sem-som"><i class="ph ph-speaker-high" aria-hidden="true"></i>Tudo menos o Discord</span>
+            </div>
+            <span class="legenda-previa">Prévia</span>
+          </div>
+        </div>
+        <div class="medidores" >
+            <div class="medidor">
+              <span class="medidor-tit">Quadros</span>
+              <span class="medidor-valor">59<small> fps</small></span>
+              <span class="medidor-sub">de 60</span>
+            </div>
+            <div class="medidor">
+              <span class="medidor-tit">Envio</span>
+              <span class="medidor-valor">11,4<small> Mbps</small></span>
+              <span class="medidor-sub">até 12</span>
+            </div>
+            <div class="medidor">
+              <span class="medidor-tit">Perda</span>
+              <span class="medidor-valor">0,0<small> %</small></span>
+              <span class="medidor-sub">ping 18 ms</span>
+            </div>
+            <div class="medidor">
+              <span class="medidor-tit">Som</span>
+              <span class="medidor-valor">387<small> kbps</small></span>
+              <span class="medidor-sub">Opus estéreo</span>
+            </div>
+            <div class="medidor">
+              <span class="medidor-tit">Codec</span>
+              <span class="medidor-valor">VP9<small></small></span>
+              <span class="medidor-sub">1920×1080</span>
+            </div>
+        </div>
+        <!-- doca: igual à do site, sempre embaixo e no centro -->
+        <div class="doca"><p id="aviso-tx" class="tx-aviso" role="status" hidden></p>
+
+
+          <div class="doca-linha">
+            <div class="ao-vivo">
+              <span class="ponto-rec" aria-hidden="true"></span>
+              <span class="num">00:42:17</span>
+              <button type="button" class="btn btn-parar" data-ir="sala.html">Parar</button>
+            </div>
+            <button type="button" class="btn btn-contorno" data-ir="fonte.html"><i class="ph ph-swap" aria-hidden="true"></i><span>Trocar fonte</span></button>
+            <button class="btn btn-contorno btn-icone redondo" id="btn-config-tx" type="button" popovertarget="pop-tx" aria-label="Ajustes da transmissão"><i class="ph ph-gear-six" aria-hidden="true"></i></button>
+          </div>
+        </div>
+      </main>
+
+      <aside class="lateral" aria-label="Pessoas na sala">
+        <section class="cartao cartao-pessoas" aria-labelledby="pessoas-tit">
+          <h2 class="cartao-tit" id="pessoas-tit">Na sala <span class="num">0</span></h2>
+          <ul class="lista-pessoas"></ul>
+        </section>
+      </aside>
+    </div>
+
+    <!-- menu da engrenagem: os mesmos campos do site, com os valores que o app aceita -->
+    <div id="pop-tx" class="pop-tx" popover aria-labelledby="pop-tx-tit">
+      <h2 class="pop-tit" id="pop-tx-tit">Ajustes da transmissão</h2>
+      <p class="tx-info num">VP9 · libvpx (processador)
+1920×1080 · 60 fps · até 12 Mbps</p>
+      <div class="grade-op">
+        <div class="campo">
+          <label for="op-res">Resolução</label>
+          <select id="op-res">
+            <option value="720">720p</option>
+            <option value="1080" selected>1080p</option>
+            <option value="1440">1440p</option>
+            <option value="2160">4K</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="op-fps">Quadros</label>
+          <select id="op-fps">
+            <option value="30">30 fps</option>
+            <option value="60" selected>60 fps</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="op-bitrate">Bitrate</label>
+          <select id="op-bitrate">
+            <option value="4">4 Mbps</option>
+            <option value="6">6 Mbps</option>
+            <option value="8">8 Mbps</option>
+            <option value="12" selected>12 Mbps</option>
+            <option value="16">16 Mbps</option>
+            <option value="20">20 Mbps</option>
+            <option value="25">25 Mbps</option>
+            <option value="30">30 Mbps</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label for="op-codec">Codec</label>
+          <select id="op-codec">
+            <option value="auto" selected>Automático (VP9)</option>
+            <option value="h264">H.264</option>
+            <option value="vp8">VP8</option>
+            <option value="vp9">VP9</option>
+            <option value="av1">AV1</option>
+          </select>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="op-svc"> Camadas de qualidade (SVC)</label>
+      <p class="ajuda">O codec já vem escolhido pro seu PC: H.264 só quando a placa de vídeo codifica, senão VP9. As camadas ajudam quem tem internet fraca, mas baixam a qualidade pra todo mundo: deixe desligado se ninguém reclamar.</p>
+    </div>
+  </section>
+
+</template>
+<template id="t-fonte">  <dialog class="dialogo largo" id="dlg-fonte" aria-labelledby="dlg-fonte-tit">
+    <form method="dialog">
+      <h2 id="dlg-fonte-tit">O que transmitir</h2>
+
+      <section class="secao" aria-label="Imagem">
+        <div class="secao-topo">
+          <div class="segmentado" role="radiogroup" aria-label="Tipo de fonte" data-mostra="tipo">
+            <button type="button" role="radio" aria-checked="true" data-valor="janelas"><span>Janelas</span></button>
+            <button type="button" role="radio" aria-checked="false" data-valor="telas"><span>Telas</span></button>
+          </div>
+          <button type="button" class="btn btn-fantasma btn-icone redondo" aria-label="Atualizar a lista" title="Atualizar a lista"><i class="ph ph-arrows-clockwise" aria-hidden="true"></i></button>
+        </div>
+        <div class="fontes" role="radiogroup" aria-label="Janelas" data-de="tipo" data-valor="janelas"></div>
+        <div class="fontes" role="radiogroup" aria-label="Telas" data-de="tipo" data-valor="telas" hidden></div>
+        <p class="ajuda">Jogo em tela cheia aparece aqui como janela. Se ficar preto, mude o jogo para "janela sem bordas".</p>
+      </section>
+
+      <section class="secao" aria-labelledby="som-tit">
+        <h3 id="som-tit">Som</h3>
+        <div class="segmentado largo" role="radiogroup" aria-label="Som" data-mostra="som">
+          <button type="button" role="radio" aria-checked="true" data-valor="menos-discord"><span>Tudo menos o Discord</span></button>
+          <button type="button" role="radio" aria-checked="false" data-valor="app"><span>Só um app</span></button>
+          <button type="button" role="radio" aria-checked="false" data-valor="sem"><span>Sem som</span></button>
+        </div>
+        <p class="ajuda" data-de="som" data-valor="menos-discord">Som dos jogos e aplicativos, sem o Discord nem o próprio app. Sons do Windows e de alguns iniciadores ficam de fora. Apps novos podem levar um instante para entrar.</p>
+        <div class="som-app" data-de="som" data-valor="app" hidden>
+          <select id="processo-audio" aria-label="App que vai com o som"></select>
+          <p class="ajuda">Só o som desse app vai junto. Música, Discord e avisos do Windows ficam de fora.</p>
+        </div>
+        <p class="ajuda" data-de="som" data-valor="sem" hidden>A transmissão vai sem som nenhum.</p>
+      </section>
+
+      <p class="erro" role="alert"></p><div class="acoes">
+        <button type="button" class="btn btn-fantasma" id="cancelar-fonte">Cancelar</button>
+        <button type="submit" class="btn btn-transmitir" id="confirmar-fonte"><span class="ponto-rec" aria-hidden="true"></span><span>Transmitir</span></button>
+      </div>
+    </form>
+  </dialog>
+
+</template><template id="t-convite">  <dialog id="dlg-convite" class="dialogo" aria-labelledby="dlg-convite-tit">
+    <form method="dialog">
+      <h2 id="dlg-convite-tit">Chamar pra <span id="convite-sala"></span></h2>
+      <div class="campo">
+        <label for="convite-link">Link de convite</label>
+        <div class="campo-com-botoes">
+          <input id="convite-link" readonly class="mono">
+          <button type="button" class="btn btn-claro" data-copiar="convite-link"><i class="ph ph-copy" aria-hidden="true"></i>Copiar</button>
+        </div>
+        <span class="ajuda">Entra direto, sem senha. Mande só pra quem você quer na sala.</span>
+      </div>
+      <div class="campo">
+        <label for="convite-codigo">Ou o código, com a senha</label>
+        <div class="campo-com-botoes">
+          <input id="convite-codigo" readonly class="mono">
+          <button type="button" class="btn btn-contorno" data-copiar="convite-codigo"><i class="ph ph-copy" aria-hidden="true"></i>Copiar</button>
+        </div>
+        <span class="ajuda">Também dá pra entrar pelo nome da sala e a senha.</span>
+      </div>
+      <div class="campo" id="campo-convite-senha" hidden>
+        <label for="convite-senha">Senha</label>
+        <div class="campo-com-botoes">
+          <input id="convite-senha" type="password" readonly class="mono">
+          <button type="button" class="btn btn-fantasma btn-icone" id="btn-ver-convite-senha" aria-label="Mostrar senha" aria-pressed="false"><i class="ph ph-eye" aria-hidden="true"></i></button>
+          <button type="button" class="btn btn-contorno" data-copiar="convite-senha"><i class="ph ph-copy" aria-hidden="true"></i>Copiar</button>
+        </div>
+      </div>
+      <p class="ajuda" id="convite-sem-senha" hidden>A senha ficou no navegador onde você criou a sala.</p>
+      <div class="acoes">
+        <button class="btn btn-contorno" value="ok" type="submit">Fechar</button>
+      </div>
+    </form>
+  </dialog></template><script type="module" src="app.js"></script></body></html>

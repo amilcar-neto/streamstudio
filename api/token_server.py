@@ -46,6 +46,7 @@ import secrets
 import threading
 import time
 import unicodedata
+import urllib.error
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -296,13 +297,22 @@ def apagar(sid: str, derrubar: bool):
     print(f"sala {sid} apagada", flush=True)
 
 
+class LiveKitSemResposta(Exception):
+    """Não deu para perguntar ao LiveKit (fora do ar, lento, erro 5xx)."""
+
+
 def participantes(sid: str):
-    """Lista do LiveKit; None se a sala não existe lá."""
+    """Lista do LiveKit; None se a sala não existe lá.
+    Se o LiveKit não respondeu, levanta LiveKitSemResposta: isso não diz nada sobre a sala."""
     try:
         return lk_api("ListParticipants", {"room": sala_lk(sid)},
                       {"room": sala_lk(sid), "roomAdmin": True}).get("participants", [])
-    except Exception:
-        return None
+    except urllib.error.HTTPError as e:
+        if e.code == 404:  # twirp "not_found": a sala não existe lá
+            return None
+        raise LiveKitSemResposta(f"HTTP {e.code}") from e
+    except Exception as e:
+        raise LiveKitSemResposta(str(e) or type(e).__name__) from e
 
 
 def alguem_transmitindo(gente) -> bool:
@@ -317,7 +327,11 @@ def conferir(sid: str):
     if not sala:
         return
     agora = time.time()
-    gente = participantes(sid)
+    try:
+        gente = participantes(sid)
+    except LiveKitSemResposta:
+        # falha temporária: não apaga nada, tenta de novo na próxima volta da vigia
+        return
     if gente is None:
         # o LiveKit não conhece a sala: ou ninguém entrou ainda, ou ela já foi fechada lá
         if sala.get("teveGente") or agora - sala["criada"] > NUNCA_USADA_SEGUNDOS:
