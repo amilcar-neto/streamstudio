@@ -173,13 +173,29 @@ pub async fn parar_envio(estado: tauri::State<'_, Estado>, video: tauri::State<'
     }
     Ok(())
 }
+/// Sai da sala e devolve a chave mais recente, para o botão "Voltar para a sala".
 #[tauri::command]
-pub async fn sair_sala(estado: tauri::State<'_, Estado>, video: tauri::State<'_, video::Estado>) -> Result<(), String> {
+pub async fn sair_sala(estado: tauri::State<'_, Estado>, video: tauri::State<'_, video::Estado>) -> Result<Option<serde_json::Value>, String> {
     let mut g = estado.0.lock().await;
     if let Some(s) = g.as_ref() { s.cancelamento.cancelar(); }
     if let Some(t) = video.0.lock().await.take() { t.parar().await; }
-    if let Some(s) = g.take() { s.fechar().await; }
-    Ok(())
+    let Some(s) = g.take() else { return Ok(None) };
+    let acesso = s.conexao.acesso();
+    let chave = acesso.as_ref().map(|a| a.chave.clone()).unwrap_or_else(|| s.chave.clone());
+    let sala = acesso.map(|a| a.sala).unwrap_or_else(|| s.sala.clone());
+    s.fechar().await;
+    Ok(Some(serde_json::json!({"chave": chave, "sala": sala})))
+}
+
+/// A sala dessa chave ainda está aberta? `None` quando ela fechou; erro quando não deu para perguntar.
+#[tauri::command]
+pub async fn conferir_sala(servidor: String, chave: String) -> Result<Option<api::Sala>, String> {
+    let api = api::ClienteApi::novo(&servidor).map_err(|e| e.to_string())?;
+    match api.sala(&chave).await {
+        Ok(sala) => Ok(Some(sala)),
+        Err(e) if matches!(e.status(), Some(400 | 401 | 403 | 404)) => Ok(None),
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 /// Codifica um valor para o fragmento do link (`%XX` em tudo que não for seguro).

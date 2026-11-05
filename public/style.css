@@ -552,9 +552,21 @@ body.teatro .palco { border-radius: 0; }
   .doca { position: sticky; bottom: 0; padding-top: 12px; background: linear-gradient(transparent, var(--estudio) 40%); }
 }
 
+/* tela cheia do iPhone: o palco cobre a página (o sistema não deixa usar a tela cheia de verdade) */
+body.cheia-falsa { overflow: hidden; }
+body.cheia-falsa .palco:not([hidden]) { position: fixed; inset: 0; z-index: var(--z-toast); height: auto; border-radius: 0; }
+body.cheia-falsa .palco .controles { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+body.cheia-falsa #volume, .palco:fullscreen #volume { display: block; }
+body.cheia-falsa #btn-teatro { display: none; }
+@media (max-width: 560px) {
+  body.cheia-falsa #btn-stats, body.cheia-falsa .quem { display: none; }
+  body.cheia-falsa #volume { width: 80px; }
+}
+
 /* celular deitado: o vídeo ocupa a tela toda, como num player */
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 540px) {
   body.na-sala .palco:not([hidden]) { position: fixed; inset: 0; z-index: var(--z-toast); height: auto; border-radius: 0; }
+  body.na-sala .palco:not([hidden]) #volume { display: block; }
   body.na-sala .palco:not([hidden]) .controles { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); padding-bottom: max(14px, env(safe-area-inset-bottom)); }
 }
 

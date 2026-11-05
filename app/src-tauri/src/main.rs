@@ -27,7 +27,7 @@ fn main() {
         .manage(interface::Estado::default())
         .invoke_handler(tauri::generate_handler![interface::conferir_servidor, interface::preparar_sala, interface::entrar_sala,
             interface::acesso_player, interface::estado_sala, interface::iniciar_envio, interface::parar_envio,
-            interface::sair_sala, interface::abrir_navegador, link::pegar_link, fontes::miniatura_fonte, fontes::listar_fontes, fontes::listar_processos_audio,
+            interface::sair_sala, interface::conferir_sala, interface::abrir_navegador, link::pegar_link, fontes::miniatura_fonte, fontes::listar_fontes, fontes::listar_processos_audio,
             video::padroes_video, video::iniciar_transmissao, video::trocar_fonte, video::trocar_audio, video::estatisticas_transmissao, video::parar_transmissao, video::previa_envio, video::preparar_previa, video::manter_previa, video::ajustar_transmissao,
             atualizacao::verificar_atualizacao, atualizacao::instalar_atualizacao])
         .build(tauri::generate_context!())

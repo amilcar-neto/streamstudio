@@ -1,6 +1,6 @@
 [package]
 name = "streamstudio"
-version = "0.2.2"
+version = "0.2.3"
 description = "Aplicativo Windows do StreamStudio"
 authors = ["StreamStudio"]
 edition = "2021"

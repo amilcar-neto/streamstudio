@@ -7,6 +7,7 @@ const PADRAO = 'https://stream.exemplo.com/stream';
 const ler = (k, padrao) => { try { return JSON.parse(localStorage.getItem(k)) ?? padrao; } catch { return padrao; } };
 const guardar = (k, v) => localStorage.setItem(k, JSON.stringify(v));
 let apelido = ler('apelido', ''), servidor = ler('servidor', PADRAO);
+localStorage.removeItem('entrada-pendente');  // chave antiga do botão de retomar
 let config, codecAutomatico, sala, fonte, audio = {modo: 'tudo_menos_discord'}, info, aoVivo = false;
 let fontes = [], tipo = 'janela', escolhida, ocupado = false, atualizando = false;
 // P6: I420 binário; conversão de cor na GPU, no ritmo da tela e sem fila de quadros.
@@ -132,7 +133,7 @@ function inicio() {
     };
   });
   function executarEntrada(form, criar) {
-    executar($('[data-submit]', form), $('.erro', form), async () => {
+    const tentativa = executar($('[data-submit]', form), $('.erro', form), async () => {
       let preparada;
       if (criar) {
         preparada = await chamar('preparar_sala', {servidor, nome: $('#in-sala-nome').value,
@@ -140,29 +141,43 @@ function inicio() {
         const donos = ler('salas-criadas', {});
         donos[`${servidor}/${preparada.id}`] = {dono: preparada.dono, senha: $('#in-sala-senha').value};
         guardar('salas-criadas', donos);
-        guardar('entrada-pendente', {servidor, ...preparada});
-        mostrarRetomada();
+        // Se a entrada falhar, a sala já existe: o botão "Voltar para a sala" leva até ela.
+        guardar('sala-para-voltar', {servidor, id: preparada.id, codigo: preparada.codigo, nome: preparada.nome, chave: preparada.chave});
       }
       const resposta = await chamar('entrar_sala', {servidor, apelido, criar: false, chave: preparada?.chave,
         alvo: criar ? $('#in-sala-nome').value : $('#in-codigo').value,
         senha: criar ? $('#in-sala-senha').value : $('#in-codigo-senha').value,
         ocioso: Number($('#in-ocioso').value)});
-      if (preparada) localStorage.removeItem('entrada-pendente');
       sala = resposta.sala; mostrarSala(); preencherSala(resposta);
     });
+    if (criar) tentativa.then(() => { if (!sala && $('#in-codigo')) mostrarRetomada(); });
   }
-  function mostrarRetomada() {
+  /* Quem sai de uma sala que continua aberta ganha um botão para voltar. Só aparece depois de
+     conferir no servidor que a sala ainda existe, para não piscar um botão que não leva a nada. */
+  let conferencia = 0;
+  async function mostrarRetomada() {
     $('#btn-retomar')?.remove();
-    const pendente = ler('entrada-pendente', null);
-    if (!pendente || pendente.servidor !== servidor) return;
+    const vez = ++conferencia;
+    const alvo = ler('sala-para-voltar', null);
+    if (!alvo?.chave || alvo.servidor !== servidor) return;
+    let aberta;
+    try { aberta = await chamar('conferir_sala', {servidor, chave: alvo.chave}); }
+    catch { return; }
+    if (vez !== conferencia || sala || !forms[1].isConnected) return;
+    if (!aberta) { localStorage.removeItem('sala-para-voltar'); return; }
     const botao = document.createElement('button');
     botao.id = 'btn-retomar'; botao.type = 'button'; botao.className = 'btn btn-contorno';
-    botao.textContent = `Retomar sala criada: ${pendente.nome || pendente.codigo}`;
+    botao.textContent = `Voltar para a sala ${aberta.nome || aberta.codigo}`;
     forms[1].append(botao);
     botao.onclick = () => executar(botao, $('.erro', forms[1]), async () => {
-      const resposta = await chamar('entrar_sala', {servidor, apelido, criar: false, alvo: pendente.codigo,
-        senha: '', ocioso: 5, chave: pendente.chave});
-      localStorage.removeItem('entrada-pendente'); sala = resposta.sala; mostrarSala(); preencherSala(resposta);
+      try {
+        const resposta = await chamar('entrar_sala', {servidor, apelido, criar: false, alvo: alvo.id || aberta.id,
+          senha: '', ocioso: 5, chave: alvo.chave});
+        sala = resposta.sala; mostrarSala(); preencherSala(resposta);
+      } catch (e) {
+        if (/não existe mais|fechou/i.test(String(e))) { localStorage.removeItem('sala-para-voltar'); botao.remove(); }
+        throw e;
+      }
     });
   }
   mostrarRetomada();
@@ -262,12 +277,16 @@ async function copiar(texto) {
   catch { aviso('Não foi possível copiar.'); }
 }
 function mostrarSala() {
+  localStorage.removeItem('sala-para-voltar');
   tela(aoVivo ? 'ao-vivo' : 'sala');
   $('.sala-nome').textContent = sala.nome || sala.codigo;
   $('.chip-codigo').textContent = sala.codigo;
   $('[data-sair]').onclick = e => {
     e.preventDefault(); executar(e.currentTarget, null, async () => {
-      await $('#player-app')?.contentWindow.fecharPlayer?.(); $('#player-app')?.remove(); assistindo = false; await chamar('sair_sala'); aoVivo = false; sala = null; info = null; fonte = null; inicio();
+      await $('#player-app')?.contentWindow.fecharPlayer?.(); $('#player-app')?.remove(); assistindo = false;
+      const saida = await chamar('sair_sala');
+      if (saida?.chave) guardar('sala-para-voltar', {servidor, id: saida.sala.id, codigo: saida.sala.codigo, nome: saida.sala.nome, chave: saida.chave});
+      aoVivo = false; sala = null; info = null; fonte = null; inicio();
     });
   };
   $('.chip-codigo').onclick = () => copiar(sala.codigo);

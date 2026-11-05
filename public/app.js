@@ -107,6 +107,10 @@ async function api(caminho, corpo) {
    ============================================================ */
 // o Firefox codifica H.264 só no processador (e devagar); lá o VP8 rende muito mais
 const FIREFOX = /firefox/i.test(navigator.userAgent);
+// iPhone e iPad ignoram o volume do <audio>: lá o som passa pelo Web Audio, que deixa controlar
+const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+// sem isso, o som do Web Audio some com o iPhone no silencioso (iOS 17+)
+if (IOS && navigator.audioSession) try { navigator.audioSession.type = 'playback'; } catch {}
 const TX_PADRAO = { res: 1080, fps: 60, mbps: 12, codec: FIREFOX ? 'vp8' : 'vp9', audio: true };
 const estado = {
   nome: guardar.ler('nome', ''),
@@ -187,21 +191,42 @@ document.addEventListener('click', (e) => {
 });
 window.addEventListener('popstate', rota);
 
-/* Quem abre um link de sala no navegador escolhe: app ou navegador. Só na primeira rota
-   da página; links colados dentro do site seguem direto. Não detecta se o app existe. */
-let perguntarApp = true;
+/* O site não consegue perguntar ao Windows se o app está instalado. Fica um sinal guardado
+   quando há sinal de app: a pessoa veio do app (troca F4.6) ou um "Abrir no app" fez a página
+   perder o foco (o app abriu ou o navegador perguntou se pode abrir). Só no Windows. */
+const WINDOWS = /Windows/.test(navigator.userAgent);
+const temApp = () => WINDOWS && guardar.ler('temApp', false) === true;
+function notarAberturaDoApp(abriu) {
+  const marcar = () => { guardar.salvar('temApp', true); parar(); abriu?.(); };
+  const sumiu = () => { if (document.hidden) marcar(); };
+  const parar = () => { window.removeEventListener('blur', marcar); document.removeEventListener('visibilitychange', sumiu); };
+  window.addEventListener('blur', marcar);
+  document.addEventListener('visibilitychange', sumiu);
+  setTimeout(parar, 10000);
+}
+
+/* Quem tem o app e abre um link de sala no navegador: o site já tenta abrir o app (como o
+   Zoom faz). Se o app não abrir, a tela fica com "Continuar no navegador". Só na primeira
+   rota da página; links colados dentro do site seguem direto. */
+let perguntarApp = temApp();
 function mostrarAbrir(tipo, id) {
   // F4.6: leva o apelido junto, se já tiver um; o fragmento # não vai ao servidor
   $('btn-abrir-app').href = `streamstudio://${tipo}/${id}` + (estado.nome ? `#n=${encodeURIComponent(estado.nome)}` : '');
   $('abrir-titulo').textContent = tipo === 'c' ? 'Te chamaram pra uma sala.' : 'Entrar na sala.';
-  $('abrir-sub').textContent = (tipo === 's' ? `Sala ${formatarCodigo(id)}. ` : '')
-    + 'Abra no app do StreamStudio ou continue aqui no navegador.';
   mostrar('abrir');
   $('btn-abrir-app').focus();
+  abrirApp();
 }
-$('btn-abrir-app').addEventListener('click', () => {
-  $('abrir-sub').textContent = 'Abrindo o app… Se nada aconteceu, continue no navegador.';
-});
+function abrirApp() {
+  $('abrir-sub').textContent = 'Abrindo no app do StreamStudio… Se ele não abrir, continue aqui no navegador.';
+  notarAberturaDoApp(() => {
+    $('abrir-sub').textContent = 'Abriu no app. Pode fechar esta aba, ou continuar aqui no navegador.';
+  });
+  // espera a página terminar de carregar: abrir o app no meio interrompe o carregamento
+  const ir = () => { location.href = $('btn-abrir-app').href; };
+  if (document.readyState === 'complete') ir(); else window.addEventListener('load', ir, { once: true });
+}
+$('btn-abrir-app').addEventListener('click', (e) => { e.preventDefault(); abrirApp(); });
 $('btn-continuar-navegador').addEventListener('click', () => rota());
 
 /* F4.6: alternar entre site e app sem conta. O botão leva nome, chave da sala e, para quem
@@ -225,10 +250,12 @@ function receberTroca() {
   chaves.salvar(sala, f.get('k'));
   if (segredoValido(f.get('d'), 128)) donos.salvar(sala, f.get('d'));
   perguntarApp = false;  // veio do app: não pergunta "abrir no app?" de novo
+  if (WINDOWS) guardar.salvar('temApp', true);
 }
 $('btn-sala-app').addEventListener('click', (e) => {
   if (!estado.sala) return e.preventDefault();
   e.currentTarget.href = linkTroca(estado.sala.id);
+  notarAberturaDoApp();
   toast('Abrindo no app… Quando ele entrar, pode sair daqui.', { acao: { rotulo: 'Sair daqui', fn: () => ir('') }, tempo: 15000 });
 });
 
@@ -549,6 +576,7 @@ async function sairDaSala() {
   pintarLuz(null);
   if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {});
   alternarTeatro(false);
+  if (cheiaFalsa()) alternarCheiaFalsa(false);
   await r?.disconnect();
   saindoDeProposito = false;
   pintarTx();
@@ -559,6 +587,7 @@ async function conectar(token) {
     adaptiveStream: false,   // a qualidade é escolhida à mão: destaque sempre no máximo
     dynacast: true,          // quem transmite para de mandar camadas que ninguém está vendo
     disconnectOnPageLeave: true,
+    webAudioMix: IOS,
   });
   room = r;
 
@@ -828,7 +857,7 @@ function render() {
 
 /* decide o que baixar e em que qualidade */
 function aplicarAssinaturas() {
-  const teatro = document.body.classList.contains('teatro') || !!document.fullscreenElement;
+  const teatro = document.body.classList.contains('teatro') || !!emTelaCheia();
   const dpr = window.devicePixelRatio || 1;
   for (const [id, s] of streams) {
     if (s.local) continue;
@@ -1063,33 +1092,36 @@ el.btnMudo.addEventListener('click', () => { estado.mudo = !estado.mudo; aplicar
 function mudarVolume(delta) { estado.volume = Math.max(0, Math.min(100, estado.volume + delta)); estado.mudo = false; aplicarVolume(); mostrarControles(); }
 
 const TOQUE = matchMedia('(pointer: coarse)').matches;
-const emTelaCheia = () => document.fullscreenElement || document.webkitFullscreenElement;
+/* O iPhone não deixa a página pôr o palco em tela cheia: só o próprio <video>, no player do
+   sistema, que mostra barra de tempo e não tem volume. Lá a tela cheia é o palco cobrindo a
+   página, com os controles do site. */
+const cheiaFalsa = () => document.body.classList.contains('cheia-falsa');
+const emTelaCheia = () => document.fullscreenElement || document.webkitFullscreenElement || cheiaFalsa();
+function alternarCheiaFalsa(ligar) {
+  document.body.classList.toggle('cheia-falsa', ligar);
+  document.dispatchEvent(new Event('fullscreenchange'));
+}
 
 async function alternarTelaCheia() {
+  if (cheiaFalsa()) return alternarCheiaFalsa(false);
   if (emTelaCheia()) {
     screen.orientation?.unlock?.();
     return (document.exitFullscreen || document.webkitExitFullscreen).call(document);
   }
   if (el.palco.hidden) return;
   const pedir = el.palco.requestFullscreen || el.palco.webkitRequestFullscreen;
+  if (!pedir) return alternarCheiaFalsa(true);
   try {
-    if (pedir) {
-      await pedir.call(el.palco);
-      // no celular, vídeo deitado gira a tela sozinho, como num player de vídeo
-      if (TOQUE && videoPalco.videoWidth > videoPalco.videoHeight) await screen.orientation?.lock?.('landscape').catch(() => {});
-    } else if (videoPalco.webkitEnterFullscreen) {
-      // iPhone só deixa o próprio <video> ir pra tela cheia
-      videoPalco.webkitEnterFullscreen();
-    } else {
-      throw new Error();
-    }
+    await pedir.call(el.palco);
+    // no celular, vídeo deitado gira a tela sozinho, como num player de vídeo
+    if (TOQUE && videoPalco.videoWidth > videoPalco.videoHeight) await screen.orientation?.lock?.('landscape').catch(() => {});
   } catch {
-    toast('O navegador não deixou entrar em tela cheia.', { erro: true });
+    alternarCheiaFalsa(true);
   }
 }
 el.btnCheia.addEventListener('click', alternarTelaCheia);
 videoPalco.addEventListener('dblclick', alternarTelaCheia);
-// o player do iPhone pausa o vídeo ao sair da tela cheia; numa live isso só atrapalha
+// se o iPhone abrir o player do sistema mesmo assim, o vídeo pausa ao sair; numa live isso só atrapalha
 videoPalco.addEventListener('webkitendfullscreen', () => videoPalco.play().catch(() => {}));
 document.addEventListener('webkitfullscreenchange', () => document.dispatchEvent(new Event('fullscreenchange')));
 document.addEventListener('fullscreenchange', () => {
@@ -1144,6 +1176,7 @@ document.addEventListener('keydown', (e) => {
   else if (k === 'arrowup') mudarVolume(5);
   else if (k === 'arrowdown') mudarVolume(-5);
   else if (/^[1-9]$/.test(k) && ids[+k - 1]) focar(ids[+k - 1]);
+  else if (k === 'escape' && cheiaFalsa()) alternarCheiaFalsa(false);
   else if (k === 'escape' && document.body.classList.contains('teatro')) alternarTeatro(false);
   else return;
   e.preventDefault();
